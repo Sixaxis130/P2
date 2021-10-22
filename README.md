@@ -105,13 +105,25 @@ Ejercicios
   continuación, una captura de `wavesurfer` en la que se vea con claridad la señal temporal, el contorno de
   potencia y la tasa de cruces por cero, junto con el etiquetado manual de los segmentos.
 
+![1 (3)](https://user-images.githubusercontent.com/71181207/138514994-810e3034-5a0d-4183-b95b-ef5cf05d4460.png)
 
 - A la vista de la gráfica, indique qué valores considera adecuados para las magnitudes siguientes:
 
 	* Incremento del nivel potencia en dB, respecto al nivel correspondiente al silencio inicial, para
 	  estar seguros de que un segmento de señal se corresponde con voz.
-
+	  
+	  Tenemos un silencio entorno a los 16 dBs, obteniendo un pico a causa de ruido de 42.82 dBs.
+	  Teniendo un incremento de 27 dBs.
+	  Vemos como incrementa a 60.72 dBs al comienzar con la primera palabra. Viniendo de 17.98 dBs.
+	  Teniendo un incremento de 46 dBs.
+	  Decidimos un valor minimo para asegurar que un segmento de señal es voz, cogemos el de 16 dBs.
+	  Al ser el más pequeño determina la transición de silencio a voz.
+	  Hemos comparado en el resto de señal y vemos que se respeta.
+	  
 	* Duración mínima razonable de los segmentos de voz y silencio.
+		
+	  Duración mínima segmento voz es de 0,55 segundos.
+	  Duración mínima segmento silencio es de 0, segundos.
 
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
 
