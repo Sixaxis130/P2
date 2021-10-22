@@ -118,12 +118,12 @@ Ejercicios
 	  Teniendo un incremento de 46 dBs.
 	  Decidimos un valor minimo para asegurar que un segmento de señal es voz, cogemos el de 16 dBs.
 	  Al ser el más pequeño determina la transición de silencio a voz.
-	  Hemos comparado en el resto de señal y vemos que se respeta.
+	  Hemos comparado con el resto de la señal y vemos que se respeta.
 	  
 	* Duración mínima razonable de los segmentos de voz y silencio.
 		
-	  Duración mínima segmento voz es de 0,55 segundos.
-	  Duración mínima segmento silencio es de 0, segundos.
+	  Duración mínima segmento voz es de 0.55 segundos.
+	  Duración mínima segmento silencio es de 0.75 segundos.
 
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
 
