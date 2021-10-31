@@ -126,12 +126,23 @@ Ejercicios
 	  Duración mínima segmento silencio es de 0.75 segundos.
 
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
-
+	  Vemos que el valor de tasa de cruces por cero incrementa mucho al haber silencios y se estabiliza al haber voz, pudiendo saber cuando tenemos voz o silencio en función de esta.
 
 ### Desarrollo del detector de actividad vocal
 
 - Complete el código de los ficheros de la práctica para implementar un detector de actividad vocal tan
   exacto como sea posible. Tome como objetivo la maximización de la puntuación-F `TOTAL`.
+	
+	Primero añadimos el codigo de pav_analysis.c y pav_analysis.h que implementamos en la Practica 1, con ello somos capaces de poder obtener las características correspondientes de cada trama. Siendo la potencia, tasa de cruces por cero y por último la amplitud media.
+	Una vez hecho esto pasamos a modificar el fichero meson.build para la compilación y enlazado de todos los .c, donde incluimos el fichero pav_analysis.c.
+	
+	![image](https://user-images.githubusercontent.com/71181207/139592260-d652128a-7f88-4242-b566-b3d8b652febc.png)
+
+	Procedemos a modificar el vad.c, donde incluimos la libreria de pav_analysis.h para poder completar la función compute_features() mediante las funciones que ya desarrollamos para la obtención de las características de la señal.
+	
+	![image](https://user-images.githubusercontent.com/71181207/139592165-0847e0db-8ba8-41d6-bcb6-982ca5bbd364.png)
+
+	![image](https://user-images.githubusercontent.com/71181207/139592457-9baf6d20-7c93-47b1-a665-8f98b321d894.png)
 
 - Inserte una gráfica en la que se vea con claridad la señal temporal, el etiquetado manual y la detección
   automática conseguida para el fichero grabado al efecto. 
