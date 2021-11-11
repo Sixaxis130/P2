@@ -126,6 +126,7 @@ Ejercicios
 	  Duración mínima segmento silencio es de 0.75 segundos.
 
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
+	  
 	  Vemos que el valor de tasa de cruces por cero incrementa mucho al haber silencios y se estabiliza al haber voz, pudiendo saber cuando tenemos voz o silencio en función de esta.
 
 ### Desarrollo del detector de actividad vocal
@@ -143,7 +144,38 @@ Ejercicios
 	![image](https://user-images.githubusercontent.com/71181207/139592165-0847e0db-8ba8-41d6-bcb6-982ca5bbd364.png)
 
 	![image](https://user-images.githubusercontent.com/71181207/139592457-9baf6d20-7c93-47b1-a665-8f98b321d894.png)
-
+	
+	Seguidamente desarrollamos una primera propuesta de maquina de estados. Dado que el automata se basa en mayor parte en la potencia de la trama, lo que hacemos es inicializar un threshold inicial p1 en la funcion vad() que diferencie las tramas de silencio con las de voz. En clase declaramos la variable alpha1, valor que le sumamos al p0 para la obtencion del umbral. De esta forma si la potencia de la trama actual es mayor a dicho valor determinaremos que la trama en este caso es de voz y en caso contrario seria silencio.
+	
+	![image](https://user-images.githubusercontent.com/71181207/139592457-9baf6d20-7c93-47b1-a665-8f98b321d894.png)
+	
+	Los primeros resultados de detección que obtuvimos en clase fueron bastante malos, y poco a poco, al ir cambiando el valor del parámetro alpha1 alcanzamos una detección de tramas silencio/voz decente de momento. A continuacion, evaluamos los resultados con vad_evaluation.pl con el próposito de concretar el valor de 'Recall', que nos indica la proporción de muestras que detecta nuestro algoritmo respecto al Ground Truth. Además, 'Precicion' nos indica la proporción de las muestras detectadas por nuestro algoritmo respecto al conjunto de muestras detectadas de la máquina de estados. Haciendo la media harmónica de los parámetros de 'Recall' y 'Precision' obtenemos la medida F-score. Como observamos en la siguiente captura obtenemos una F-score de 82,439%.
+	
+	****captura pendiente********* (captura #2 del google doc)
+	
+	**Primera Mejora del Autómata**
+	
+	De momento el umbral p1 adquiere el valor tomado de la potencia en la primera trama más una diferencia. Deducimos que esta forma de definir el umbral se puede optimizar. Entonces, lo que hemos pensado para mejorar el umbral es hacer el promedio de la potencia en la primera trama, de manera que cojeremos el valor de potencia promedio de las primeras tramas.
+	
+	****captura pendiente******** (formula de la media, la tengo que hacer con el ipad)
+	
+	Con el objetivo de aplicar la mejora comentada, modificamos pav_analysis.c y su libreria para añadir la nueva función compute_init_power().
+	
+	****captura pendiente******** (captura #3 del google doc)
+	
+	Agregamos dos características más a VAD_DATA, "p0" y "num_trama" particulares de la señal. Con "p0" conseguimos mantener el valor que vamos calculando de la potencia a medida que van sucediendo las tramas, y la variable "num_trama" la usamos como un contador.
+	
+	****captura pendiente******** (captura #4 del google doc)
+	
+	Como podemos apreciar en la siguiente captura modificamos el estado inicial del automata.
+	
+	****captura pendiente******** (captura #5 del google doc)
+	
+	Observamos que hasta que no se hayanprocesado 10 tramas del audio, que las adjudicamos como silencio, entonces se van sumando la potencia en lineal de las distintas tramas. Las podemos sumar en lineal ya que con la funcion compute_init_power() pasamos de dB's a lineal. 
+	
+	El automata no modificara su estado y permanecera en en el estado INIT a lo largo de las 10 tramas. Cuando hayamos hecho la suma de la potencia de las tramas, calculamos el promedio de la potencia en logaritmico i asignamos este valor a p0 y tambien modificamos de la misma forma el valor del threshold p1.
+	
+	
 - Inserte una gráfica en la que se vea con claridad la señal temporal, el etiquetado manual y la detección
   automática conseguida para el fichero grabado al efecto. 
 
