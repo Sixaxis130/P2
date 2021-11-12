@@ -183,27 +183,25 @@ Ejercicios
 	
 	**Segunda Mejora del Autómata**
 	
-	En esta mejora hemos pensado en incorporar otro threshold más prudente como el que comentamos en clase, consistiendo en que si estamos en una trama de silencio y de repente superamos p1, entonces pasaremos al estado maybe voice (ST_UNDEF), de forma que aun no habremos decidido si es voz o no lo es. Seguidamente, determinamos un segundo threshold, p2 = p1 + alpha1. Para corroborar que se trata de una trama de voz requeriremos que la potencia sea mas grande que k1 una vez haya pasado un tiempo prudencial. Si una vez pasado este tiempo no supera el umbral, significara que se trata de un intervalo silencioso. Procederemos de la misma forma en la casuistica que la potencia baje de k1. En ese caso no corroboraremos que sea silencio, ya que podria ser un caso de sonido fricativo sordo que de forma habitual viene seguido de un sonido sonoro. 
+	En esta mejora hemos pensado en incorporar otro threshold más prudente como el que comentamos en clase, consistiendo en que si estamos en una trama de silencio y de repente superamos p1, entonces pasaremos al estado maybe voice (ST_UNDEF), de forma que aun no habremos decidido si es voz o no lo es. Seguidamente, determinamos un segundo threshold, p2 = p1 + alpha1. Para corroborar que se trata de una trama de voz requeriremos que la potencia sea mas grande que p2 una vez haya pasado un tiempo prudencial. Si una vez pasado este tiempo no supera el umbral, significara que se trata de un intervalo silencioso. Procederemos de la misma forma en la casuistica que la potencia baje de p2. En ese caso no corroboraremos que sea silencio, ya que podria ser un caso de sonido fricativo sordo que de forma habitual viene seguido de un sonido sonoro. 
 	
 	A continuaciñon cambiamos la gestion que hace del autómata en el vad.c.
 	
 	****captura pendiente******** (captura #7 del google doc)
 	
-	Ahora tendremos bastantes tramas clasificadas como UNDEF. Lo que tenemos que hacer es cambiar como tratamos dichas tramas en el main, porque el evaluador entre el .lab original y .vad sabe comparar una trama indefinida con una trama silenciosa o de voz. 
+	Ahora tendremos bastantes tramas clasificadas como UNDEF. Lo que tenemos que hacer es cambiar como tratamos dichas tramas en el main debido a que el evaluador entre el .lab y .vad no sabe comparar una trama indefinida con una trama silenciosa o de voz. 
 	
-	Entonces, intentaremos hacer igual que en la siguiente imagen.
+	Entonces, pasamos a implementar la idea del siguiente esquema.
 	
 	****captura pendiente******** (captura #8 del google doc)
 	
-	Por consiguiente, si el estado anterior es voz y la potencia del intervalo actual es bajo, entonces el estado seria UNDEF. De esta manera, no sabremos si es realmente este el estado hasta que acabemos de definir el estado de un intervalo futuro. Con este objetivo, implementamos parametro "last_defined_state" que la utilizaremos para gestionar adecuadamente esta decision pospuesta y para no dar lugar a la escritura de un intervalo como "maybe silence" en los archivos .vad.
+	Por consiguiente, si el estado anterior es voz y la potencia del intervalo actual es baja, entonces el estado sera UNDEF, estando en el estado maybe silence. De esta manera, no sabremos si es realmente este el estado hasta que acabemos de definir el estado de un intervalo futuro. Con este objetivo, implementamos el parametro "last_defined_state" que lo utilizamos para gestionar adecuadamente esta decision diferida y para no dar lugar a la escritura de un intervalo como UNDEF debido a un posible maybe silence en los archivos .vad.
 	
 	****captura pendiente******** (captura #9 del google doc)
 	
-	Confirmamos que al acabar dicha señal no se permita escribir UNDEF como estado.
+	De esta manera confirmamos que al acabar dicha señal no se permite escribir UNDEF como estado. Ahora evaluamos nuestro programa y, como podemos observar en la siguiente imagen alcanzamos un F-score de 90,351%.
 	
 	****captura pendiente******** (captura #10 del google doc)
-	
-	Ahora evaluamos nuestro programa y, como podemos observar en la siguiente imagen alcanzamos un F-score de 90,351%.
 	
 	****captura pendiente******** (captura #11 del google doc)
 	
@@ -211,22 +209,37 @@ Ejercicios
 - Inserte una gráfica en la que se vea con claridad la señal temporal, el etiquetado manual y la detección
   automática conseguida para el fichero grabado al efecto. 
   
-  **Adaptación de picos para la optimización de la clasificación**
-  
-  Como podemos apreciar, al inicio del audio nos aparece un ruido no muy grande. Aunque parece que no afecte demasiado, cuando realizamos el power plot observamos que podria llevar a confusiones en cuanto a clasificacion.
+
+  Como podemos apreciar, al inicio del audio nos aparece un ruido. En un principio pensabamos que no afectaria demasiado, pero cuando realizamos el power plot nos dimos cuenta que esto influia de forma negativa a la hora de hacer la clasificacion por parte del sistema.
   
   ****captura pendiente******** (captura #12 del google doc)
   
-  Como se puede apreciar, el intervalo esta marcado como silencio de forma manual, sin embargo, la potencia es bastante alta, por eso se recortará el intervalo. Asi pues procedemos a recortar y a desplazar las etiquetas.
+  Como se puede apreciar, el intervalo lo etiquetamos como silencio de forma manual, sin embargo, el nivel de potencia es considerablemente alta. Decidimos recortar el intervalo y desplazar las etiquetas. 
+  
+  ****captura pendiente******** (captura #13 del google doc)
+  
+  Ahora evaluamos el rendimiento del detector que hemos generado sobre la señal, el resultado que obtenemos es el siguiente:
+  
+  ****captura pendiente******** (captura #14 del google doc)
+  
+  Con el wafesurfer podemos ver el resultado graficamente.
+  
+  ****captura pendiente******** (captura #15 del google doc)
   
   
-
-
 - Explique, si existen. las discrepancias entre el etiquetado manual y la detección automática.
+
+Parece ser que cuando nos acercamos o salimos de tramas de voz, de vez en cuando aparecen pequeñas tramas silenciosas. Esto es debido a que el automata no sabe como clasificar la tram, entonces se queda indefinida. De hecho, las tramas pequeñas que se observan son silencios, asi pues el 95,1% de F-score anterior parece correcto.
+
+Si es cierto que hay algunas pocas discrepancias. Podriamos mejorar el automata analizando frecuencialmente las tramas i observar la DFT de la potencia con la finalidad de optimizar el rendimiento del detector. También podriamos mejorar el sistema haciendo que se haga teniendo en cuenta la tasa de cruces por cero y la amplitud a parte de la potencia para diferenciar el tipo de trama.
 
 - Evalúe los resultados sobre la base de datos `db.v4` con el script `vad_evaluation.pl` e inserte a 
   continuación las tasas de sensibilidad (*recall*) y precisión para el conjunto de la base de datos (sólo
   el resumen).
+
+Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evaluation.pl` conseguimos un resultado con una F-score de 90,351% (Recall Voice = 93,48%; Precision Voice = 88,24% F-score Voice = 92,38% ; Recall Silence = 82,45%; Precision Silence = 89,98% F-score Silence = 88,36%).
+
+<img width="748" alt="Captura de Pantalla 2021-11-12 a les 22 45 24" src="https://user-images.githubusercontent.com/91251152/141538234-9f339ab1-b19c-4838-b817-5804fc295b6d.png">
 
 
 ### Trabajos de ampliación
@@ -236,12 +249,48 @@ Ejercicios
 - Si ha desarrollado el algoritmo para la cancelación de los segmentos de silencio, inserte una gráfica en
   la que se vea con claridad la señal antes y después de la cancelación (puede que `wavesurfer` no sea la
   mejor opción para esto, ya que no es capaz de visualizar varias señales al mismo tiempo).
-
+  
+  Antes de cambiar los intervalos de silencio por cero, necisitamos tener tramas a sustituir. Con la funcion sf_write_float() escribimos trama por trama en el archivo .wav de salida.
+  
+   ****captura pendiente******** (captura #17 del google doc)
+   
+   Una vez lo hemos escrito en el .vad el tipo de trama clasificada por el automata, si nos encontrasemos en una trama silenciosa, deberiamos que volver hacia atras con exactitud frame_size, y despues tenemos que sobreescribir los valores de la trama en cuestión por ceros. Utilizamos sf_seek() para desplazarnos al principio de la trama que hemos escrito.
+   
+    ****captura pendiente******** (captura #18 del google doc)
+    
+    Podemos ver que da error cuando la funcion nos devuelve -1, verificamos pues esta casuistica en un if.
+    
+     ****captura pendiente******** (captura #18 del google doc)
+     
+     Ahora probamos como funciona.
+     
+    ****captura pendiente******** (captura #20 del google doc)
+    ****captura pendiente******** (captura #21 del google doc)
+    
+    Ahora distinguimos toda la voz y las tramas de ruido en perfecto silencio.
+      
+     
 #### Gestión de las opciones del programa usando `docopt_c`
 
 - Si ha usado `docopt_c` para realizar la gestión de las opciones y argumentos del programa `vad`, inserte
   una captura de pantalla en la que se vea el mensaje de ayuda del programa.
+  
+  Como hicimos en clase, implementamos una manera más inteligente de decidir la diferencia de dB's entre silencio y voz mediante el umbral de decision. Para ello, usamos el docopt, el cual lo usamos para transportar el valor de dicha diferencia. Para ello modificamos el fichero vad_docopt.h. Dicha diferencia la nombramos alpha1.
+  
+  ****captura pendiente******** (captura #22 del google doc)
+  
+  Una vez compilado el programa se incorporan nuevos datos al fichero vad_docopt.h.
 
+  ****captura pendiente******** (captura #23 del google doc)
+  
+  Una vez hecho esto añadimos el parámetro alpha1 a la estructura de datos VAD_DATA que encontramos en la libreria de vad.
+  
+    ****captura pendiente******** (captura #24 del google doc)
+    
+    Para finalizar, asignamos valor a alpha1 en el programa vad.c, siendo instanciado en el fichero main al ser una cadena de carácteres que pasamos como argumento. Dicha cadena la cambiamos a float para su uso posterior.
+    
+    ****captura pendiente******** (captura #25 del google doc)
+    
 
 ### Contribuciones adicionales y/o comentarios acerca de la práctica
 
@@ -250,6 +299,10 @@ Ejercicios
 
 - Si lo desea, puede realizar también algún comentario acerca de la realización de la práctica que
   considere de interés de cara a su evaluación.
+  
+  En esta práctica hemos podido aprender mucho sobre el reconocimiento de audio, no obstante, no ha sido facil el desarrollo de la misma. El contenido de la practica nos ha parecido muy interesante y util referente a los intereses que tenemos de programacion. El modelo matemática FSA junto a su mejora y el estudio de las caracteristicas de la señal han sido los temas que mas nos han interesado de esta sesion de laboratorio.
+  
+  Hemos podido conseguir una F-score un poco superior al 90% empleando la base de datos que se nos proporciono. Debido al tiempo limitado del que disponemos consideramos que podriamos haber implementado alguna mejora para la decision a la hora de reconocer y asignar un estado voz o silencio. Una posible mejora que podriamos haber implementado habria sido al diferenciar dos estados: maybe voice y maybe silence, en vez de un estado undefined, mejorando la F-score final. Aun asi estamos satisfechos con el resultado respecto a las horas que le hemos dedicado a la practica.
 
 
 ### Antes de entregar la práctica
