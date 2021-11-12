@@ -161,8 +161,8 @@ Ejercicios
 	
 	Con el objetivo de aplicar la mejora comentada, modificamos pav_analysis.c y su libreria para añadir la nueva función compute_init_power().
 	
-	****captura pendiente******** (captura #3 del google doc)
-	
+	<img width="379" alt="Captura de Pantalla 2021-11-12 a les 18 35 01" src="https://user-images.githubusercontent.com/91251152/141510158-9bf9fe87-a6a8-48eb-8022-d067bae64563.png">
+
 	Agregamos dos características más a VAD_DATA, "p0" y "num_trama" particulares de la señal. Con "p0" conseguimos mantener el valor que vamos calculando de la potencia a medida que van sucediendo las tramas, y la variable "num_trama" la usamos como un contador.
 	
 	****captura pendiente******** (captura #4 del google doc)
@@ -171,13 +171,55 @@ Ejercicios
 	
 	****captura pendiente******** (captura #5 del google doc)
 	
-	Observamos que hasta que no se hayanprocesado 10 tramas del audio, que las adjudicamos como silencio, entonces se van sumando la potencia en lineal de las distintas tramas. Las podemos sumar en lineal ya que con la funcion compute_init_power() pasamos de dB's a lineal. 
+	Observamos que hasta que no se hayan procesado 10 tramas del audio, la cuales asumiremos como silencio, no cambiaremos de estado. Entonces se iran sumando la potencia en lineal de las distintas tramas mediante la funcion compute_init_power(). 
 	
-	El automata no modificara su estado y permanecera en en el estado INIT a lo largo de las 10 tramas. Cuando hayamos hecho la suma de la potencia de las tramas, calculamos el promedio de la potencia en logaritmico i asignamos este valor a p0 y tambien modificamos de la misma forma el valor del threshold p1.
+	El automata no modificara su estado y permanecera en en el estado INIT a lo largo de las 10 tramas. Cuando hayamos hecho la suma de la potencia de las tramas, calculamos el promedio de la potencia en dB's y asignamos este valor a p0. De esta manera tambien modificamos el valor del threshold p1.
+	
+	Ahora solo queda gestionar lo que escribimos en el .vad que creamos para poder comparar con los ficheros .lab. A continuación modificamos la gestión de escritura en el .vad desde la función principal, y de esta manera conseguir que no se escriba un UNDEF cuando nos encontremos en el estado inicial. Es decir, que se consideren como silencio las tramas iniciales.
+	
+	****captura pendiente******** (captura #6 del google doc)
+	
+	A la hora de ejecutar el programa desarrollado obtenemos un F-score muy parecido al anterior. Por lo tanto, decidimos implementar una segunda mejora.
+	
+	**Segunda Mejora del Autómata**
+	
+	En esta mejora hemos pensado en incorporar otro threshold más prudente como el que comentamos en clase, consistiendo en que si estamos en una trama de silencio y de repente superamos p1, entonces pasaremos al estado maybe voice (ST_UNDEF), de forma que aun no habremos decidido si es voz o no lo es. Seguidamente, determinamos un segundo threshold, p2 = p1 + alpha1. Para corroborar que se trata de una trama de voz requeriremos que la potencia sea mas grande que k1 una vez haya pasado un tiempo prudencial. Si una vez pasado este tiempo no supera el umbral, significara que se trata de un intervalo silencioso. Procederemos de la misma forma en la casuistica que la potencia baje de k1. En ese caso no corroboraremos que sea silencio, ya que podria ser un caso de sonido fricativo sordo que de forma habitual viene seguido de un sonido sonoro. 
+	
+	A continuaciñon cambiamos la gestion que hace del autómata en el vad.c.
+	
+	****captura pendiente******** (captura #7 del google doc)
+	
+	Ahora tendremos bastantes tramas clasificadas como UNDEF. Lo que tenemos que hacer es cambiar como tratamos dichas tramas en el main, porque el evaluador entre el .lab original y .vad sabe comparar una trama indefinida con una trama silenciosa o de voz. 
+	
+	Entonces, intentaremos hacer igual que en la siguiente imagen.
+	
+	****captura pendiente******** (captura #8 del google doc)
+	
+	Por consiguiente, si el estado anterior es voz y la potencia del intervalo actual es bajo, entonces el estado seria UNDEF. De esta manera, no sabremos si es realmente este el estado hasta que acabemos de definir el estado de un intervalo futuro. Con este objetivo, implementamos parametro "last_defined_state" que la utilizaremos para gestionar adecuadamente esta decision pospuesta y para no dar lugar a la escritura de un intervalo como "maybe silence" en los archivos .vad.
+	
+	****captura pendiente******** (captura #9 del google doc)
+	
+	Confirmamos que al acabar dicha señal no se permita escribir UNDEF como estado.
+	
+	****captura pendiente******** (captura #10 del google doc)
+	
+	Ahora evaluamos nuestro programa y, como podemos observar en la siguiente imagen alcanzamos un F-score de 90,351%.
+	
+	****captura pendiente******** (captura #11 del google doc)
 	
 	
 - Inserte una gráfica en la que se vea con claridad la señal temporal, el etiquetado manual y la detección
   automática conseguida para el fichero grabado al efecto. 
+  
+  **Adaptación de picos para la optimización de la clasificación**
+  
+  Como podemos apreciar, al inicio del audio nos aparece un ruido no muy grande. Aunque parece que no afecte demasiado, cuando realizamos el power plot observamos que podria llevar a confusiones en cuanto a clasificacion.
+  
+  ****captura pendiente******** (captura #12 del google doc)
+  
+  Como se puede apreciar, el intervalo esta marcado como silencio de forma manual, sin embargo, la potencia es bastante alta, por eso se recortará el intervalo. Asi pues procedemos a recortar y a desplazar las etiquetas.
+  
+  
 
 
 - Explique, si existen. las discrepancias entre el etiquetado manual y la detección automática.
