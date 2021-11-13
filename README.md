@@ -154,12 +154,13 @@ Ejercicios
 	<img width="901" alt="Captura de Pantalla 2021-11-13 a les 15 30 27" src="https://user-images.githubusercontent.com/91251152/141647569-507ccba3-359a-4007-b744-725f942f40b6.png">
 
 	
+	
 	**Primera Mejora del Autómata**
 	
-	De momento el umbral p1 adquiere el valor tomado de la potencia en la primera trama más una diferencia. Deducimos que esta forma de definir el umbral se puede optimizar. Entonces, lo que hemos pensado para mejorar el umbral es hacer el promedio de la potencia en la primera trama, de manera que cojeremos el valor de potencia promedio de las primeras tramas.
+	De momento el umbral p1 adquiere el valor tomado de la potencia en la primera trama más una diferencia. Deducimos que esta forma de definir el umbral se puede optimizar. Entonces, lo que hemos pensado para mejorar el umbral es hacer el promedio de la potencia en la primera trama, de manera que cogeremos el valor de potencia promedio de las primeras tramas.
 	
-	![IMG_DEDA65C0B0A0-1](https://user-images.githubusercontent.com/91251152/141647310-c88c2fea-df61-4eb0-9c88-f15ba752a906.jpeg)
-	
+	![IMG_DEDA65C0B0A0-1](https://user-images.githubusercontent.com/91251152/141649550-47f58725-264b-4e9d-bcbd-8f1225938616.jpeg)
+
 	Con el objetivo de aplicar la mejora comentada, modificamos pav_analysis.c y su libreria para añadir la nueva función compute_init_power().
 
 	Agregamos dos características más a VAD_DATA, "p0" y "num_trama" particulares de la señal. Con "p0" conseguimos mantener el valor que vamos calculando de la potencia a medida que van sucediendo las tramas, y la variable "num_trama" la usamos como un contador. Despues de esto, modificamos la gestion del estado inicial del automata.
@@ -173,6 +174,7 @@ Ejercicios
 	Ahora solo queda gestionar lo que escribimos en el .vad que creamos para poder comparar con los ficheros .lab. A continuación modificamos la gestión de escritura en el .vad desde la función principal (main_vad.c), y de esta manera conseguir que no se escriba un UNDEF cuando nos encontremos en el estado inicial. Es decir, que se consideren como silencio las tramas iniciales.
 	
 	A la hora de ejecutar el programa desarrollado obtenemos un F-score muy parecido al anterior. Por lo tanto, decidimos implementar una segunda mejora para obtener mejores resultados.
+	
 	
 	
 	**Segunda Mejora del Autómata**
@@ -190,6 +192,7 @@ Ejercicios
 	De esta manera confirmamos que al acabar dicha señal no se permite escribir UNDEF como estado. Ahora evaluamos nuestro programa y, como podemos observar en la siguiente imagen alcanzamos un F-score de 90,351%.
 	
 	<img width="898" alt="Captura de Pantalla 2021-11-13 a les 15 55 32" src="https://user-images.githubusercontent.com/91251152/141648352-a8d0053c-21de-478e-95fa-924204056d0d.png">
+
 
 
 - Inserte una gráfica en la que se vea con claridad la señal temporal, el etiquetado manual y la detección
@@ -211,12 +214,15 @@ Ejercicios
   
   <img width="902" alt="Captura de Pantalla 2021-11-13 a les 16 01 01" src="https://user-images.githubusercontent.com/91251152/141648580-a2e60adb-e2e9-48ab-b5a5-e0153b9f19bc.png">
 
+
   
 - Explique, si existen. las discrepancias entre el etiquetado manual y la detección automática.
 
 Parece ser que cuando nos acercamos o salimos de tramas de voz, de vez en cuando aparecen pequeñas tramas silenciosas. Esto es debido a que el automata no sabe como clasificar la trama, quedandose indefinida. De hecho, las tramas pequeñas que se observan son silenciosas, asi pues el 95,1% que obtenemos de F-score lo consideramos correcto.
 
 Si es cierto que hay algunas pocas discrepancias. Consideramos que podriamos mejorar el automata analizando frecuencialmente las tramas i observar la DFT de la potencia con la finalidad de optimizar el rendimiento del detector. También podriamos mejorar el sistema teniendo en cuenta la tasa de cruces por cero y la amplitud a parte de la potencia para diferenciar el tipo de trama.
+
+
 
 - Evalúe los resultados sobre la base de datos `db.v4` con el script `vad_evaluation.pl` e inserte a 
   continuación las tasas de sensibilidad (*recall*) y precisión para el conjunto de la base de datos (sólo
@@ -225,6 +231,8 @@ Si es cierto que hay algunas pocas discrepancias. Consideramos que podriamos mej
 Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evaluation.pl` conseguimos un resultado con una F-score de 90,351% (Recall Voice = 93,48%; Precision Voice = 88,24% F-score Voice = 92,38% ; Recall Silence = 82,45%; Precision Silence = 89,98% F-score Silence = 88,36%).
 
 <img width="748" alt="Captura de Pantalla 2021-11-12 a les 22 45 24" src="https://user-images.githubusercontent.com/91251152/141538234-9f339ab1-b19c-4838-b817-5804fc295b6d.png">
+
+
 
 
 ### Trabajos de ampliación
@@ -250,6 +258,8 @@ Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evalu
     De esta manera distinguimos toda la voz respecto las tramas de ruido que permanecen en perfecto silencio.
       
      
+     
+     
 #### Gestión de las opciones del programa usando `docopt_c`
 
 - Si ha usado `docopt_c` para realizar la gestión de las opciones y argumentos del programa `vad`, inserte
@@ -270,6 +280,8 @@ Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evalu
     Para finalizar, asignamos valor a alpha1 en el programa vad.c, siendo instanciado en el fichero main al ser una cadena de carácteres que pasamos como argumento. Dicha cadena la cambiamos a float para su uso posterior.
     
     <img width="750" alt="Captura de Pantalla 2021-11-13 a les 16 24 15" src="https://user-images.githubusercontent.com/91251152/141649405-ad6a0328-e84f-4450-bdd0-7767615b270c.png">
+
+
 
 
 ### Contribuciones adicionales y/o comentarios acerca de la práctica
