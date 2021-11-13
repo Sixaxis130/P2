@@ -139,7 +139,7 @@ Ejercicios
 	
 	![image](https://user-images.githubusercontent.com/71181207/139592260-d652128a-7f88-4242-b566-b3d8b652febc.png)
 
-	Procedemos a modificar el vad.c, donde incluimos la libreria de pav_analysis.h para poder completar la función compute_features() mediante las funciones que ya desarrollamos para la obtención de las características de la señal.
+	En el laboratorio modificamos el archivo vad.c, donde incluimos la libreria de pav_analysis.h para poder completar la función compute_features() mediante las funciones que ya desarrollamos para la obtención de las características de la señal.
 	
 	![image](https://user-images.githubusercontent.com/71181207/139592165-0847e0db-8ba8-41d6-bcb6-982ca5bbd364.png)
 
@@ -151,87 +151,72 @@ Ejercicios
 	
 	Los primeros resultados de detección que obtuvimos en clase fueron bastante malos, y poco a poco, al ir cambiando el valor del parámetro alpha1 alcanzamos una detección de tramas silencio/voz decente de momento. A continuacion, evaluamos los resultados con vad_evaluation.pl con el próposito de concretar el valor de 'Recall', que nos indica la proporción de muestras que detecta nuestro algoritmo respecto al Ground Truth. Además, 'Precicion' nos indica la proporción de las muestras detectadas por nuestro algoritmo respecto al conjunto de muestras detectadas de la máquina de estados. Haciendo la media harmónica de los parámetros de 'Recall' y 'Precision' obtenemos la medida F-score. Como observamos en la siguiente captura obtenemos una F-score de 82,439%.
 	
-	****captura pendiente********* (captura #2 del google doc)
+	<img width="901" alt="Captura de Pantalla 2021-11-13 a les 15 30 27" src="https://user-images.githubusercontent.com/91251152/141647569-507ccba3-359a-4007-b744-725f942f40b6.png">
+
 	
 	**Primera Mejora del Autómata**
 	
 	De momento el umbral p1 adquiere el valor tomado de la potencia en la primera trama más una diferencia. Deducimos que esta forma de definir el umbral se puede optimizar. Entonces, lo que hemos pensado para mejorar el umbral es hacer el promedio de la potencia en la primera trama, de manera que cojeremos el valor de potencia promedio de las primeras tramas.
 	
-	****captura pendiente******** (formula de la media, la tengo que hacer con el ipad)
+	![IMG_DEDA65C0B0A0-1](https://user-images.githubusercontent.com/91251152/141647310-c88c2fea-df61-4eb0-9c88-f15ba752a906.jpeg)
 	
 	Con el objetivo de aplicar la mejora comentada, modificamos pav_analysis.c y su libreria para añadir la nueva función compute_init_power().
-	
-	<img width="379" alt="Captura de Pantalla 2021-11-12 a les 18 35 01" src="https://user-images.githubusercontent.com/91251152/141510158-9bf9fe87-a6a8-48eb-8022-d067bae64563.png">
 
-	Agregamos dos características más a VAD_DATA, "p0" y "num_trama" particulares de la señal. Con "p0" conseguimos mantener el valor que vamos calculando de la potencia a medida que van sucediendo las tramas, y la variable "num_trama" la usamos como un contador.
+	Agregamos dos características más a VAD_DATA, "p0" y "num_trama" particulares de la señal. Con "p0" conseguimos mantener el valor que vamos calculando de la potencia a medida que van sucediendo las tramas, y la variable "num_trama" la usamos como un contador. Despues de esto, modificamos la gestion del estado inicial del automata.
 	
-	****captura pendiente******** (captura #4 del google doc)
-	
-	Como podemos apreciar en la siguiente captura modificamos el estado inicial del automata.
-	
-	****captura pendiente******** (captura #5 del google doc)
-	
+	<img width="901" alt="Captura de Pantalla 2021-11-13 a les 15 35 43" src="https://user-images.githubusercontent.com/91251152/141647719-0b5d589b-7562-4962-abac-8b959a9a3eea.png">
+
 	Observamos que hasta que no se hayan procesado 10 tramas del audio, la cuales asumiremos como silencio, no cambiaremos de estado. Entonces se iran sumando la potencia en lineal de las distintas tramas mediante la funcion compute_init_power(). 
 	
 	El automata no modificara su estado y permanecera en en el estado INIT a lo largo de las 10 tramas. Cuando hayamos hecho la suma de la potencia de las tramas, calculamos el promedio de la potencia en dB's y asignamos este valor a p0. De esta manera tambien modificamos el valor del threshold p1.
 	
-	Ahora solo queda gestionar lo que escribimos en el .vad que creamos para poder comparar con los ficheros .lab. A continuación modificamos la gestión de escritura en el .vad desde la función principal, y de esta manera conseguir que no se escriba un UNDEF cuando nos encontremos en el estado inicial. Es decir, que se consideren como silencio las tramas iniciales.
+	Ahora solo queda gestionar lo que escribimos en el .vad que creamos para poder comparar con los ficheros .lab. A continuación modificamos la gestión de escritura en el .vad desde la función principal (main_vad.c), y de esta manera conseguir que no se escriba un UNDEF cuando nos encontremos en el estado inicial. Es decir, que se consideren como silencio las tramas iniciales.
 	
-	****captura pendiente******** (captura #6 del google doc)
+	A la hora de ejecutar el programa desarrollado obtenemos un F-score muy parecido al anterior. Por lo tanto, decidimos implementar una segunda mejora para obtener mejores resultados.
 	
-	A la hora de ejecutar el programa desarrollado obtenemos un F-score muy parecido al anterior. Por lo tanto, decidimos implementar una segunda mejora.
 	
 	**Segunda Mejora del Autómata**
 	
-	En esta mejora hemos pensado en incorporar otro threshold más prudente como el que comentamos en clase, consistiendo en que si estamos en una trama de silencio y de repente superamos p1, entonces pasaremos al estado maybe voice (ST_UNDEF), de forma que aun no habremos decidido si es voz o no lo es. Seguidamente, determinamos un segundo threshold, p2 = p1 + alpha1. Para corroborar que se trata de una trama de voz requeriremos que la potencia sea mas grande que p2 una vez haya pasado un tiempo prudencial. Si una vez pasado este tiempo no supera el umbral, significara que se trata de un intervalo silencioso. Procederemos de la misma forma en la casuistica que la potencia baje de p2. En ese caso no corroboraremos que sea silencio, ya que podria ser un caso de sonido fricativo sordo que de forma habitual viene seguido de un sonido sonoro. 
+	En esta mejora hemos pensado en incorporar otro threshold más prudente como el que comentamos en clase, consistiendo en que si estamos en una trama de silencio y de repente superamos p1, entonces pasaremos al estado maybe voice (ST_UNDEF), de forma que aun no habremos decidido si es voz o no lo es. Seguidamente, determinamos un segundo threshold, p2 = p1 + alpha2. 
 	
-	A continuaciñon cambiamos la gestion que hace del autómata en el vad.c.
+	Para corroborar que se trata de una trama de voz requeriremos que la potencia sea mas grande que p2 una vez haya pasado un tiempo prudencial. Si una vez pasado este tiempo no supera el umbral, significara que se trata de un intervalo silencioso. Procederemos de la misma forma en la casuistica que la potencia baje de p2. En ese caso no corroboraremos que sea silencio, ya que podria ser un caso de sonido fricativo sordo que de forma habitual viene seguido de un sonido sonoro. Teniendo en cuenta lo mencionado, cambiamos la gestion que hace del autómata en el vad.c.
 	
-	****captura pendiente******** (captura #7 del google doc)
+	Como consecuencia de la nueva gestion del sistema que hemos implementado, obtenemos bastantes tramas clasificadas como UNDEF. Lo que tenemos que hacer es cambiar como tratamos dichas tramas en el main_vad.c debido a que el evaluador entre el .lab y .vad no sabe comparar una trama indefinida con una trama silenciosa o de voz. Entonces, pasamos a implementar la idea del siguiente esquema.
 	
-	Ahora tendremos bastantes tramas clasificadas como UNDEF. Lo que tenemos que hacer es cambiar como tratamos dichas tramas en el main debido a que el evaluador entre el .lab y .vad no sabe comparar una trama indefinida con una trama silenciosa o de voz. 
-	
-	Entonces, pasamos a implementar la idea del siguiente esquema.
-	
-	****captura pendiente******** (captura #8 del google doc)
-	
+	<img width="872" alt="Captura de Pantalla 2021-11-13 a les 15 53 19" src="https://user-images.githubusercontent.com/91251152/141648280-e81d04f0-777c-4e0a-9ec5-b39908f85e50.png">
+
 	Por consiguiente, si el estado anterior es voz y la potencia del intervalo actual es baja, entonces el estado sera UNDEF, estando en el estado maybe silence. De esta manera, no sabremos si es realmente este el estado hasta que acabemos de definir el estado de un intervalo futuro. Con este objetivo, implementamos el parametro "last_defined_state" que lo utilizamos para gestionar adecuadamente esta decision diferida y para no dar lugar a la escritura de un intervalo como UNDEF debido a un posible maybe silence en los archivos .vad.
-	
-	****captura pendiente******** (captura #9 del google doc)
 	
 	De esta manera confirmamos que al acabar dicha señal no se permite escribir UNDEF como estado. Ahora evaluamos nuestro programa y, como podemos observar en la siguiente imagen alcanzamos un F-score de 90,351%.
 	
-	****captura pendiente******** (captura #10 del google doc)
-	
-	****captura pendiente******** (captura #11 del google doc)
-	
-	
+	<img width="898" alt="Captura de Pantalla 2021-11-13 a les 15 55 32" src="https://user-images.githubusercontent.com/91251152/141648352-a8d0053c-21de-478e-95fa-924204056d0d.png">
+
+
 - Inserte una gráfica en la que se vea con claridad la señal temporal, el etiquetado manual y la detección
   automática conseguida para el fichero grabado al efecto. 
   
-
   Como podemos apreciar, al inicio del audio nos aparece un ruido. En un principio pensabamos que no afectaria demasiado, pero cuando realizamos el power plot nos dimos cuenta que esto influia de forma negativa a la hora de hacer la clasificacion por parte del sistema.
   
-  ****captura pendiente******** (captura #12 del google doc)
-  
+  <img width="731" alt="Captura de Pantalla 2021-11-13 a les 15 57 09" src="https://user-images.githubusercontent.com/91251152/141648415-7d4fdd88-2831-4279-b60f-a83ac932c781.png">
+
   Como se puede apreciar, el intervalo lo etiquetamos como silencio de forma manual, sin embargo, el nivel de potencia es considerablemente alta. Decidimos recortar el intervalo y desplazar las etiquetas. 
   
-  ****captura pendiente******** (captura #13 del google doc)
-  
+  <img width="630" alt="Captura de Pantalla 2021-11-13 a les 15 57 58" src="https://user-images.githubusercontent.com/91251152/141648445-8f01e7e6-079e-4126-943f-800ab9176184.png">
+
   Ahora evaluamos el rendimiento del detector que hemos generado sobre la señal, el resultado que obtenemos es el siguiente:
   
-  ****captura pendiente******** (captura #14 del google doc)
-  
+  <img width="897" alt="Captura de Pantalla 2021-11-13 a les 16 00 26" src="https://user-images.githubusercontent.com/91251152/141648562-040089ae-874a-48d2-adc6-e51b2ccd3799.png">
+
   Con el wafesurfer podemos ver el resultado graficamente.
   
-  ****captura pendiente******** (captura #15 del google doc)
-  
+  <img width="902" alt="Captura de Pantalla 2021-11-13 a les 16 01 01" src="https://user-images.githubusercontent.com/91251152/141648580-a2e60adb-e2e9-48ab-b5a5-e0153b9f19bc.png">
+
   
 - Explique, si existen. las discrepancias entre el etiquetado manual y la detección automática.
 
-Parece ser que cuando nos acercamos o salimos de tramas de voz, de vez en cuando aparecen pequeñas tramas silenciosas. Esto es debido a que el automata no sabe como clasificar la tram, entonces se queda indefinida. De hecho, las tramas pequeñas que se observan son silencios, asi pues el 95,1% de F-score anterior parece correcto.
+Parece ser que cuando nos acercamos o salimos de tramas de voz, de vez en cuando aparecen pequeñas tramas silenciosas. Esto es debido a que el automata no sabe como clasificar la trama, quedandose indefinida. De hecho, las tramas pequeñas que se observan son silenciosas, asi pues el 95,1% que obtenemos de F-score lo consideramos correcto.
 
-Si es cierto que hay algunas pocas discrepancias. Podriamos mejorar el automata analizando frecuencialmente las tramas i observar la DFT de la potencia con la finalidad de optimizar el rendimiento del detector. También podriamos mejorar el sistema haciendo que se haga teniendo en cuenta la tasa de cruces por cero y la amplitud a parte de la potencia para diferenciar el tipo de trama.
+Si es cierto que hay algunas pocas discrepancias. Consideramos que podriamos mejorar el automata analizando frecuencialmente las tramas i observar la DFT de la potencia con la finalidad de optimizar el rendimiento del detector. También podriamos mejorar el sistema teniendo en cuenta la tasa de cruces por cero y la amplitud a parte de la potencia para diferenciar el tipo de trama.
 
 - Evalúe los resultados sobre la base de datos `db.v4` con el script `vad_evaluation.pl` e inserte a 
   continuación las tasas de sensibilidad (*recall*) y precisión para el conjunto de la base de datos (sólo
@@ -250,24 +235,19 @@ Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evalu
   la que se vea con claridad la señal antes y después de la cancelación (puede que `wavesurfer` no sea la
   mejor opción para esto, ya que no es capaz de visualizar varias señales al mismo tiempo).
   
-  Antes de cambiar los intervalos de silencio por cero, necisitamos tener tramas a sustituir. Con la funcion sf_write_float() escribimos trama por trama en el archivo .wav de salida.
-  
-   ****captura pendiente******** (captura #17 del google doc)
+  Antes de cambiar los intervalos de silencio por cero, necesitamos tener tramas a sustituir. Haciendo uso de la funcion sf_write_float() podemos ir escribiendo trama por trama en el archivo .wav de salida si lo especificamos en la terminal.
    
-   Una vez lo hemos escrito en el .vad el tipo de trama clasificada por el automata, si nos encontrasemos en una trama silenciosa, deberiamos que volver hacia atras con exactitud frame_size, y despues tenemos que sobreescribir los valores de la trama en cuestión por ceros. Utilizamos sf_seek() para desplazarnos al principio de la trama que hemos escrito.
+   Una vez lo hemos escrito en el .vad el tipo de trama clasificada por el automata, si nos encontrasemos en una trama silenciosa, deberiamos que volver hacia atras con exactitud frame_size, y despues tenemos que sobreescribir los valores de la trama en cuestión por ceros. Utilizando la funcion sf_seek() nos podemos desplazar al principio de la trama que acabamos de escribir.
    
-    ****captura pendiente******** (captura #18 del google doc)
+   <img width="877" alt="Captura de Pantalla 2021-11-13 a les 16 11 51" src="https://user-images.githubusercontent.com/91251152/141648955-da3a078e-da14-4da2-a0ec-e52914c81397.png">
+
+    Como podemos observar tenemos un error cuando esta funcion nos devuelve -1, por lo que, verificamos este posible caso mediante un if() implementado en el fichero main_vad.c. A continuacion probamos su correcto funcionamiento.
     
-    Podemos ver que da error cuando la funcion nos devuelve -1, verificamos pues esta casuistica en un if.
+    <img width="1019" alt="Captura de Pantalla 2021-11-13 a les 16 17 31" src="https://user-images.githubusercontent.com/91251152/141649158-fd86ff70-0a25-4564-b637-cc62370274d5.png">
     
-     ****captura pendiente******** (captura #18 del google doc)
-     
-     Ahora probamos como funciona.
-     
-    ****captura pendiente******** (captura #20 del google doc)
-    ****captura pendiente******** (captura #21 del google doc)
-    
-    Ahora distinguimos toda la voz y las tramas de ruido en perfecto silencio.
+    <img width="747" alt="Captura de Pantalla 2021-11-13 a les 16 18 14" src="https://user-images.githubusercontent.com/91251152/141649181-edaca310-39b4-45f4-882f-dd7600b4d484.png">
+
+    De esta manera distinguimos toda la voz respecto las tramas de ruido que permanecen en perfecto silencio.
       
      
 #### Gestión de las opciones del programa usando `docopt_c`
@@ -277,20 +257,20 @@ Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evalu
   
   Como hicimos en clase, implementamos una manera más inteligente de decidir la diferencia de dB's entre silencio y voz mediante el umbral de decision. Para ello, usamos el docopt, el cual lo usamos para transportar el valor de dicha diferencia. Para ello modificamos el fichero vad_docopt.h. Dicha diferencia la nombramos alpha1.
   
-  ****captura pendiente******** (captura #22 del google doc)
+  <img width="747" alt="Captura de Pantalla 2021-11-13 a les 16 21 16" src="https://user-images.githubusercontent.com/91251152/141649274-95fdb143-6b25-43e6-a0bd-ca3f8e423000.png">
   
   Una vez compilado el programa se incorporan nuevos datos al fichero vad_docopt.h.
 
-  ****captura pendiente******** (captura #23 del google doc)
+  <img width="510" alt="Captura de Pantalla 2021-11-13 a les 16 21 53" src="https://user-images.githubusercontent.com/91251152/141649309-0cff7bd7-0d80-462a-8e48-db07a3d3e108.png">
+
+  Una vez hecho esto añadimos el parámetro alpha1 a la estructura de datos VAD_DATA que encontramos en la libreria del vad.c.
   
-  Una vez hecho esto añadimos el parámetro alpha1 a la estructura de datos VAD_DATA que encontramos en la libreria de vad.
-  
-    ****captura pendiente******** (captura #24 del google doc)
-    
+    <img width="747" alt="Captura de Pantalla 2021-11-13 a les 16 23 09" src="https://user-images.githubusercontent.com/91251152/141649355-41608b53-acf2-48c2-aaa6-594d5f8649f9.png">
+
     Para finalizar, asignamos valor a alpha1 en el programa vad.c, siendo instanciado en el fichero main al ser una cadena de carácteres que pasamos como argumento. Dicha cadena la cambiamos a float para su uso posterior.
     
-    ****captura pendiente******** (captura #25 del google doc)
-    
+    <img width="750" alt="Captura de Pantalla 2021-11-13 a les 16 24 15" src="https://user-images.githubusercontent.com/91251152/141649405-ad6a0328-e84f-4450-bdd0-7767615b270c.png">
+
 
 ### Contribuciones adicionales y/o comentarios acerca de la práctica
 
