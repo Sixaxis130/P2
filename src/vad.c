@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "vad.h"
 #include "pav_analysis.h"
+#include "vad.h"
 
-const float FRAME_TIME = 10.0F; /* in ms. */
+const float FRAME_TIME = 10.0F; /* in milis. */
 
 /* 
  * As the output state is only ST_VOICE, ST_SILENCE, or ST_UNDEF,
@@ -14,25 +14,25 @@ const float FRAME_TIME = 10.0F; /* in ms. */
  */
 
 const char *state_str[] = {
-  "UNDEF", "S", "V", "INIT"
-};
+    "UNDEF", "S", "V", "INIT"};
 
-const char *state2str(VAD_STATE st) {
+const char *state2str(VAD_STATE st)
+{
   return state_str[st];
 }
 
 /* Define a datatype with interesting features */
-typedef struct {
+typedef struct
+{
   float zcr;
   float p;
   float am;
 } Features;
 
-/* 
- * TODO: Delete and use your own features!
- */
 
-Features compute_features(const float *x, int N) {
+
+Features compute_features(const float *x, int N)
+{
   /*
    * Input: x[i] : i=0 .... N-1 
    * Ouput: computed features
@@ -42,12 +42,12 @@ Features compute_features(const float *x, int N) {
    *
    * For the moment, compute random value between 0 and 1 
    */
+
   Features feat;
-  
-  feat.zcr = compute_zcr(x, N,16000);
+  feat.zcr = compute_zcr(x, N, 16000);
   feat.p = compute_power(x, N);
   feat.am = compute_am(x, N);
-  
+
   return feat;
 }
 
@@ -55,15 +55,21 @@ Features compute_features(const float *x, int N) {
  * TODO: Init the values of vad_data
  */
 
-VAD_DATA * vad_open(float rate) {
-  VAD_DATA *vad_data = malloc(sizeof(VAD_DATA));
+VAD_DATA *vad_open(float rate, float alpha1)
+{
+  VAD_DATA *vad_data = malloc(sizeof(VAD_DATA)); // Asigna cantidad de memoria en bytes (que se especifica)
   vad_data->state = ST_INIT;
+  vad_data->alpha1 = alpha1;
   vad_data->sampling_rate = rate;
   vad_data->frame_length = rate * FRAME_TIME * 1e-3;
+  vad_data->p0 = 0;
+  vad_data->num_trama = 0;
   return vad_data;
 }
 
-VAD_STATE vad_close(VAD_DATA *vad_data) {
+//Devuelve estado de la trama de señal
+VAD_STATE vad_close(VAD_DATA *vad_data)
+{
   /* 
    * TODO: decide what to do with the last undecided frames
    */
@@ -73,7 +79,8 @@ VAD_STATE vad_close(VAD_DATA *vad_data) {
   return state;
 }
 
-unsigned int vad_frame_size(VAD_DATA *vad_data) {
+unsigned int vad_frame_size(VAD_DATA *vad_data)
+{
   return vad_data->frame_length;
 }
 
@@ -82,7 +89,8 @@ unsigned int vad_frame_size(VAD_DATA *vad_data) {
  * using a Finite State Automata
  */
 
-VAD_STATE vad(VAD_DATA *vad_data, float *x) {
+VAD_STATE vad(VAD_DATA *vad_data, float *x)
+{
 
   /* 
    * TODO: You can change this, using your own features,
@@ -92,32 +100,61 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x) {
   Features f = compute_features(x, vad_data->frame_length);
   vad_data->last_feature = f.p; /* save feature, in case you want to show */
 
-  switch (vad_data->state) {
+  switch (vad_data->state)
+  {
   case ST_INIT:
+
+    if (vad_data->num_trama < 10)
+    {
+      vad_data->p0 = vad_data->p0 + compute_init_power(f.p);
+      vad_data->num_trama++;
+      break;
+    }
+
+    vad_data->p0 = 10 * log10(vad_data->p0 / vad_data->num_trama);
+    vad_data->p1 = vad_data->p0 + 2; 
     vad_data->state = ST_SILENCE;
+
+    vad_data->p2 = vad_data->p1 + 1.5; 
+
     break;
 
   case ST_SILENCE:
-    if (f.p > 0.95)
-      vad_data->state = ST_VOICE;
+
+   if (f.p > vad_data->p1) //Si superamos p1, entonces esperamos a que alguna de las siguientes tramas supere p2 
+      vad_data->state = ST_UNDEF; // MAYBE VOICE 
+
+   
     break;
 
   case ST_VOICE:
-    if (f.p < 0.01)
-      vad_data->state = ST_SILENCE;
+
+    if (f.p < vad_data->p2) /// Si bajamos de p2
+      vad_data->state = ST_UNDEF; /// MAYBE SILENCE
+    
     break;
 
   case ST_UNDEF:
+
+    if (f.p > vad_data->p2) // Si superamos p2
+      vad_data->state = ST_VOICE; // VOICE
+    
+    if(f.p < vad_data->p1) // Si bajamos de p1
+      vad_data->state = ST_SILENCE; // SILENCE
+    
     break;
   }
 
   if (vad_data->state == ST_SILENCE ||
       vad_data->state == ST_VOICE)
-    return vad_data->state;
+      
+        return vad_data->state;
   else
-    return ST_UNDEF;
+        return ST_UNDEF;
+  
 }
 
-void vad_show_state(const VAD_DATA *vad_data, FILE *out) {
+void vad_show_state(const VAD_DATA *vad_data, FILE *out)
+{
   fprintf(out, "%d\t%f\n", vad_data->state, vad_data->last_feature);
 }

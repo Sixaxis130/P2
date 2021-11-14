@@ -4,7 +4,7 @@
 double PI = 3.14159265358979323846;
 
 float compute_power(const float *x, unsigned int N) {
-    float sumatorio = 0;
+    float sumatorio = 1e-4;
     int i;
 
     for(i=0; i < N; i++){
@@ -68,4 +68,9 @@ float compute_power_windowed_Hamming(const float *x, unsigned int N, unsigned in
         count++;
     }
     return 10*log10(res_interior_log);
+}
+
+float compute_init_power(float p) 
+{ 
+  return pow(10, (p / 10));
 }
