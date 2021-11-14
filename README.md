@@ -127,7 +127,7 @@ Ejercicios
 
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
 	  
-	  Vemos que el valor de tasa de cruces por cero incrementa mucho al haber silencios y se estabiliza al haber voz, pudiendo saber cuando tenemos voz o silencio en función de esta.
+	  Vemos que el valor de tasa de cruces por cero incrementa mucho al haber silencios y decrementa estabilizandose al haber voz, pudiendo saber cuando tenemos voz o silencio en función de este dato.
 
 ### Desarrollo del detector de actividad vocal
 
@@ -255,7 +255,12 @@ Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evalu
     
     <img width="747" alt="Captura de Pantalla 2021-11-13 a les 16 18 14" src="https://user-images.githubusercontent.com/91251152/141649181-edaca310-39b4-45f4-882f-dd7600b4d484.png">
 
-    De esta manera distinguimos toda la voz respecto las tramas de ruido que permanecen en perfecto silencio.
+    De esta manera distinguimos toda la voz respecto las tramas de ruido que permanecen en perfecto silencio. Esto lo notamos sobretodo al escuchar los audios por separado. Para el análisis de la señal después de la cancelación de ruido en los segmentos de silencio, hemos utilizado al Audacity. Con este programa de edición de voz se nos ha hecho más fácil el analizar los tracks al poder reproducirlos de manera independiente con las señales una encima de la otra.
+    
+    Adjuntamos captura de las dos señales, la superior es la resultante de aplicar la cancelación en los segmentos de silencio, mientras que la inferior es la original.
+    
+    ![image](https://user-images.githubusercontent.com/71181207/141686522-76631151-54fd-40dd-ad24-6d0b408db165.png)
+
       
      
      
@@ -277,7 +282,7 @@ Evaluando los resultados sobre la base de datos `db.v4` con el script `vad_evalu
   
     <img width="747" alt="Captura de Pantalla 2021-11-13 a les 16 23 09" src="https://user-images.githubusercontent.com/91251152/141649355-41608b53-acf2-48c2-aaa6-594d5f8649f9.png">
 
-    Para finalizar, asignamos valor a alpha1 en el programa vad.c, siendo instanciado en el fichero main al ser una cadena de carácteres que pasamos como argumento. Dicha cadena la cambiamos a float para su uso posterior.
+    Para finalizar, asignamos valor a alpha1 en el programa vad.c, siendo instanciado en el fichero main pasandolo en formato cadena de carácteres. Dicha cadena la cambiamos a tipo float para su uso.
     
     <img width="750" alt="Captura de Pantalla 2021-11-13 a les 16 24 15" src="https://user-images.githubusercontent.com/91251152/141649405-ad6a0328-e84f-4450-bdd0-7767615b270c.png">
 
